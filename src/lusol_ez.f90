@@ -11,6 +11,26 @@
 
     private
 
+    type,public :: lusol_settings
+        integer(ip) :: nout = 6
+        integer(ip) :: lprint = 0
+        integer(ip) :: maxcol = 5
+        integer(ip) :: method = 0 ! TPP
+        integer(ip) :: keepLU = 1
+
+        real(rp) :: Ltol1 = 100.0_rp
+        real(rp) :: Ltol2 = 10.0_rp
+        real(rp) :: small = epsilon(1.0_rp)**0.8_rp
+        real(rp) :: Utol1 = epsilon(1.0_rp)**0.67_rp
+        real(rp) :: Utol2 = epsilon(1.0_rp)**0.67_rp
+        real(rp) :: Uspace = 3.0_rp
+        real(rp) :: dens1 = 0.3_rp
+        real(rp) :: dens2 = 0.5_rp
+
+        integer(ip) :: mode = 5 ! for [[lu6sol]] : `w` solves `A w = v`.
+    end type lusol_settings
+
+
     public :: solve
 
     contains
@@ -20,7 +40,7 @@
 !>
 !  Wrapper for [[lu1fac]] + [[lu6sol]] to solve a linear system `A*x = b`.
 
-    subroutine solve(n_cols,n_rows,n_nonzero,irow,icol,mat,b,x,istat)
+    subroutine solve(n_cols,n_rows,n_nonzero,irow,icol,mat,b,x,istat,settings)
 
     integer,intent(in) :: n_cols !! `n`: number of columns in A.
     integer,intent(in) :: n_rows !! `m`: number of rows in A.
@@ -30,6 +50,7 @@
     real(rp),dimension(n_rows),intent(in) :: b !! right hand side (size is `m`)
     real(rp),dimension(n_cols),intent(out) :: x !! solution !size is `n`
     integer,intent(out) :: istat !! status code
+    type(lusol_settings),intent(in),optional :: settings !! settings (if not present, defaults are used)
 
     integer(ip) :: nelem, n, m
     integer(ip) :: lena
@@ -48,22 +69,9 @@
                                             ipinv, iqinv,  &
                                             locc, locr
 
-    integer(ip),parameter :: nout = 6
-    integer(ip),parameter :: lprint = 0
-    integer(ip),parameter :: maxcol = 5
-    integer(ip),parameter :: method = 0 ! TPP
-    integer(ip),parameter :: keepLU = 1
+    type(lusol_settings) :: options
 
-    real(rp),parameter :: Ltol1 = 100.0_rp
-    real(rp),parameter :: Ltol2 = 10.0_rp
-    real(rp),parameter :: small = epsilon(1.0_rp)**0.8_rp
-    real(rp),parameter :: Utol1 = epsilon(1.0_rp)**0.67_rp
-    real(rp),parameter :: Utol2 = epsilon(1.0_rp)**0.67_rp
-    real(rp),parameter :: Uspace = 3.0_rp
-    real(rp),parameter :: dens1 = 0.3_rp
-    real(rp),parameter :: dens2 = 0.5_rp
-
-    integer(ip) :: mode = 5 ! for [[lu6sol]] : `w` solves `A w = v`.
+    if (present(settings)) options = settings ! use user-supplied settings
 
     n = n_cols
     m = n_rows
@@ -74,39 +82,35 @@
     allocate(indc(lena))
     allocate(indr(lena))
     associate (n =>n_cols, m => n_rows)
-        allocate(p(m)    , q(n)    , &
-                 lenc(n) , lenr(m) , &
-                 iploc(n), iqloc(m), &
-                 ipinv(m), iqinv(n), &
-                 locc(n) , locr(m))
-        allocate(ww(n)) !x
+        allocate(p(m), q(n), lenc(n), lenr(m), &
+                 iploc(n), iqloc(m), ipinv(m), &
+                 iqinv(n), locc(n) , locr(m))
+        allocate(ww(n))
+        allocate(w(n)) ! x
+        allocate(v(m)) ! b
     end associate
-
-    allocate(w(n_cols)) ! x
-    allocate(v(n_rows)) ! b
 
     a = 0; indc=0; indr=0
     a(1:nelem) = mat
-    indc(1:nelem) = irow    ! check these...seems to be right based on the comment
-    indr(1:nelem) = icol    !
+    indc(1:nelem) = irow
+    indr(1:nelem) = icol
 
-    ! settings (whould be inputs)
+    ! settings
     luparm = 0
-    luparm( 1) = nout
-    luparm( 2) = lprint
-    luparm( 3) = maxcol
-    luparm( 6) = method
-    luparm( 8) = keepLU
-
+    luparm( 1) = options%nout
+    luparm( 2) = options%lprint
+    luparm( 3) = options%maxcol
+    luparm( 6) = options%method
+    luparm( 8) = options%keepLU
     parmlu = 0
-    parmlu( 1) = Ltol1
-    parmlu( 2) = Ltol2
-    parmlu( 3) = small
-    parmlu( 4) = Utol1
-    parmlu( 5) = Utol2
-    parmlu( 6) = Uspace
-    parmlu( 7) = dens1
-    parmlu( 8) = dens2
+    parmlu( 1) = options%Ltol1
+    parmlu( 2) = options%Ltol2
+    parmlu( 3) = options%small
+    parmlu( 4) = options%Utol1
+    parmlu( 5) = options%Utol2
+    parmlu( 6) = options%Uspace
+    parmlu( 7) = options%dens1
+    parmlu( 8) = options%dens2
 
     call lu1fac( m    , n    , nelem, lena , luparm, parmlu, &
                  a    , indc , indr , p    , q     ,         &
@@ -134,7 +138,7 @@
     v = b ! right hand side
 
     ! solve `A w = v`.
-    call lu6sol( mode, m, n, v, w,       &
+    call lu6sol( options%mode, m, n, v, w, &
                  lena, luparm, parmlu,   &
                  a, indc, indr, p, q,    &
                  lenc, lenr, locc, locr, &
