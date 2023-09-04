@@ -36,6 +36,7 @@
     real(rp),dimension(:),allocatable :: a
     integer(ip),dimension(:),allocatable :: indc
     integer(ip),dimension(:),allocatable :: indr
+    real(rp),dimension(:),allocatable :: ww
     real(rp),dimension(:),allocatable :: w
     real(rp),dimension(:),allocatable :: v
     integer(ip) :: inform
@@ -78,11 +79,11 @@
                  iploc(n), iqloc(m), &
                  ipinv(m), iqinv(n), &
                  locc(n) , locr(m))
-        allocate(w(n_cols))
+        allocate(ww(n)) !x
     end associate
 
-    allocate(w(n_rows)) ! x
-    allocate(v(n_cols)) ! b
+    allocate(w(n_cols)) ! x
+    allocate(v(n_rows)) ! b
 
     a = 0; indc=0; indr=0
     a(1:nelem) = mat
@@ -110,7 +111,7 @@
     call lu1fac( m    , n    , nelem, lena , luparm, parmlu, &
                  a    , indc , indr , p    , q     ,         &
                  lenc , lenr , locc , locr ,                 &
-                 iploc, iqloc, ipinv, iqinv, w     , inform )
+                 iploc, iqloc, ipinv, iqinv, ww     , inform )
 
     write(*,*) 'lu1fac inform = ', inform
 
