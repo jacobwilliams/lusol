@@ -30,6 +30,10 @@
         real(wp),dimension(n,1) :: x_vec
         integer :: istat
 
+        write(*,*) ''
+        write(*,*) '***** test 1'
+        write(*,*) ''
+
         call solve(n,m,m*n,irow,icol,a,b,x,istat)
 
         x_vec(1:3,1) = x
@@ -76,6 +80,10 @@
         real(wp),dimension(n) :: x
         real(wp),dimension(n,1) :: x_vec
         integer :: istat
+
+        write(*,*) ''
+        write(*,*) '***** test 2'
+        write(*,*) ''
 
         call solve(n,m,m*n,irow,icol,a,b,x,istat)
 
