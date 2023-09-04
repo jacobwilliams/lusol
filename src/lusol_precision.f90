@@ -1,5 +1,5 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-! File lusol_recision.f90
+! File lusol_precision.f90
 !
 ! SNOPT module for defining integer(ip), real(rp).
 ! snPrecision.f90 should be one of the following 3 files:
