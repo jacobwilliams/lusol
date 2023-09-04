@@ -1,0 +1,17 @@
+name = "lusol"
+author = "Jacob Williams"
+copyright  = "Copyright (c) 2016 Systems Optimization Laboratory"
+license = "MIT & BSD"
+description = "LUSOL"
+homepage = "https://github.com/jacobwilliams/lusol"
+
+[build]
+auto-executables = true
+auto-examples = true
+auto-tests = true
+
+[library]
+source-dir = "src"
+
+[install]
+library = true
