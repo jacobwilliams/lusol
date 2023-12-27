@@ -37,10 +37,20 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 module lusol_precision
-  use  iso_fortran_env
+  use iso_fortran_env
   implicit none
   public
 
-  integer(4),   parameter :: ip = int64, rp = real64
+  integer(4), parameter :: ip = int64
+
+#ifdef REAL32
+  integer(4),parameter,public :: rp = real32   !! default real kind [4 bytes]
+#elif REAL64
+  integer(4),parameter,public :: rp = real64   !! default real kind [8 bytes]
+#elif REAL128
+  integer(4),parameter,public :: rp = real128  !! default real kind [16 bytes]
+#else
+  integer(4),parameter,public :: rp = real64   !! default real kind [8 bytes]
+#endif
 
 end module lusol_precision
