@@ -76,7 +76,7 @@
     n = n_cols
     m = n_rows
     nelem = n_nonzero
-    lena = 1 + max( 2*nelem, 10*m, 10*n, 10000 )
+    lena = 1 + max( 2*nelem, 10*m, 10*n, 10000_ip )
 
     allocate(a(lena))
     allocate(indc(lena))

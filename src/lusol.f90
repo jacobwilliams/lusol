@@ -6602,7 +6602,7 @@ Colj:     do lc = lc1, lc2
     intrinsic           :: huge
     integer(ip)         :: i, ix, kmax
     real(rp)            :: dmax, xi
-    real(rp), parameter :: realmax = huge(realmax)
+    real(rp), parameter :: realmax = huge(1.0_rp)
 
     if (n < 1) then
        iAmax = 0
